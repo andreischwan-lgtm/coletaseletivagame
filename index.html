@@ -1,2 +1,494 @@
-# coletaseletivagame
-Game da coleta seletiva Schwan
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Jogo educativo sobre coleta seletiva e reciclagem.">
+  <title>Desafio da Coleta Seletiva</title>
+  <style>
+    :root {
+      --ink: #153326;
+      --muted: #60776a;
+      --paper: #f5f8f1;
+      --card: rgba(255, 255, 255, .9);
+      --line: #d8e5d5;
+      --green: #2e8b57;
+      --green-dark: #1c633e;
+      --lime: #c9ee75;
+      --success: #167a4b;
+      --danger: #b94545;
+      --shadow: 0 18px 45px rgba(27, 83, 52, .12);
+      --radius-lg: 28px;
+      --radius-md: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 2%, rgba(201, 238, 117, .35), transparent 28rem),
+        radial-gradient(circle at 95% 22%, rgba(108, 206, 162, .22), transparent 24rem),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button { font: inherit; }
+    button:focus-visible, [draggable="true"]:focus-visible {
+      outline: 4px solid rgba(43, 139, 87, .3);
+      outline-offset: 3px;
+    }
+
+    .shell { width: min(1180px, calc(100% - 36px)); margin: 0 auto; }
+    .topbar { padding: 22px 0 8px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: -.02em; }
+    .brand-mark {
+      width: 42px; height: 42px; display: grid; place-items: center; border-radius: 14px;
+      color: #fff; font-size: 24px; background: var(--green); box-shadow: 0 8px 18px rgba(46, 139, 87, .25);
+    }
+    .brand small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .info-pill { border: 1px solid var(--line); background: rgba(255,255,255,.7); color: var(--muted); padding: 10px 14px; border-radius: 99px; font-size: 12px; font-weight: 700; }
+
+    .hero { padding: 48px 0 32px; display: grid; grid-template-columns: 1.25fr .75fr; gap: 30px; align-items: end; }
+    .eyebrow { margin: 0 0 13px; color: var(--green-dark); font-size: 12px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { max-width: 650px; margin: 0; font-size: clamp(38px, 6vw, 72px); line-height: .98; letter-spacing: -.065em; }
+    .hero-copy { max-width: 650px; margin: 20px 0 0; color: var(--muted); font-size: clamp(16px, 2vw, 19px); line-height: 1.55; }
+    .hero-note { padding: 22px; border: 1px solid rgba(216, 229, 213, .9); border-radius: var(--radius-lg); background: rgba(255,255,255,.62); box-shadow: var(--shadow); }
+    .hero-note strong { display: block; margin-bottom: 8px; font-size: 17px; }
+    .hero-note p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+    .game-card { overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(10px); }
+    .game-head { padding: 22px 26px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .game-label { color: var(--muted); font-size: 12px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+    .progress-wrap { display: flex; align-items: center; gap: 12px; min-width: min(390px, 55%); }
+    .progress { height: 9px; flex: 1; overflow: hidden; border-radius: 99px; background: #e8f0e4; }
+    .progress > span { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--green), #72bd63); transition: width .45s ease; }
+    .round { color: var(--muted); font-size: 13px; font-weight: 800; white-space: nowrap; }
+
+    .game-body { padding: 28px; }
+    .score-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 26px; }
+    .stat { padding: 15px 16px; border-radius: 16px; background: #f7faf5; }
+    .stat span { display: block; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .stat strong { display: block; margin-top: 3px; color: var(--green-dark); font-size: 25px; letter-spacing: -.04em; }
+
+    .play-area { display: grid; grid-template-columns: minmax(250px, .7fr) minmax(0, 1.3fr); gap: 28px; align-items: stretch; }
+    .item-panel { min-height: 390px; padding: 28px; border-radius: 22px; display: flex; flex-direction: column; justify-content: space-between; background: #153326; color: #fff; position: relative; overflow: hidden; }
+    .item-panel::after { content: ""; width: 190px; height: 190px; position: absolute; right: -65px; bottom: -75px; border-radius: 50%; background: rgba(201, 238, 117, .16); }
+    .item-kicker { color: var(--lime); font-size: 12px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+    .item-visual { position: relative; z-index: 1; display: grid; place-items: center; min-height: 180px; }
+    .item-emoji { font-size: clamp(76px, 10vw, 116px); filter: drop-shadow(0 14px 16px rgba(0,0,0,.2)); user-select: none; }
+    .custom-art { position: relative; width: 126px; height: 126px; font-size: 0; filter: drop-shadow(0 14px 16px rgba(0,0,0,.2)); }
+    .custom-art::before, .custom-art::after { content: ""; position: absolute; display: block; }
+    .cap-art::before { width: 88px; height: 34px; left: 20px; top: 45px; border-radius: 28px 28px 16px 16px; background: linear-gradient(135deg, #78a8ff, #526be7); box-shadow: inset -9px -7px 0 rgba(55, 64, 173, .24); }
+    .cap-art::after { width: 55px; height: 21px; left: 6px; top: 69px; border-radius: 55% 20% 55% 20%; transform: rotate(-13deg); background: #4e51bc; }
+    .cartucho-art::before { width: 65px; height: 88px; left: 31px; top: 24px; border-radius: 3px; transform: skewY(-8deg); background: linear-gradient(90deg, #d49a6c 0 28%, #f1bf88 28% 74%, #bd795c 74%); box-shadow: inset 8px 0 rgba(255,255,255,.12); }
+    .cartucho-art::after { width: 65px; height: 15px; left: 31px; top: 17px; transform: skewY(-27deg); background: #efc38f; border-radius: 3px 5px 2px 2px; }
+    .touca-art::before { width: 105px; height: 67px; left: 11px; top: 28px; border-radius: 58% 58% 35% 35%; background: radial-gradient(circle at 28% 33%, #ded2ff 0 7%, transparent 8%), radial-gradient(circle at 63% 25%, #c9b9ff 0 7%, transparent 8%), linear-gradient(135deg, #eadfff, #9b78d8); border-bottom: 10px solid #7251ad; }
+    .touca-art::after { width: 64px; height: 20px; left: 32px; top: 79px; border-radius: 50%; background: rgba(91, 65, 148, .55); }
+    .avental-art::before { width: 72px; height: 83px; left: 27px; top: 32px; clip-path: polygon(28% 0, 72% 0, 100% 24%, 83% 100%, 17% 100%, 0 24%); background: linear-gradient(90deg, #b9e7e3, #5bbab6); }
+    .avental-art::after { width: 70px; height: 42px; left: 28px; top: 18px; border: 9px solid #80d0ca; border-bottom: 0; border-radius: 42px 42px 0 0; }
+    .item-name { position: relative; z-index: 1; margin: 0; font-size: clamp(25px, 3vw, 34px); letter-spacing: -.04em; }
+    .item-tip { position: relative; z-index: 1; margin: 9px 0 0; color: #c6d8c7; font-size: 14px; line-height: 1.5; }
+    .drag-hint { position: relative; z-index: 1; margin-top: 20px; color: #e7f2e5; font-size: 12px; font-weight: 700; opacity: .85; }
+
+    .bins-panel { padding: 2px 0; }
+    .instruction { margin: 0 0 16px; color: var(--muted); font-size: 14px; font-weight: 700; }
+    .bins { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .bin {
+      min-height: 164px; padding: 16px 12px 15px; border: 2px solid transparent; border-radius: 20px; color: #fff;
+      cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center;
+      box-shadow: 0 10px 18px rgba(29, 48, 34, .09); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, filter .18s ease;
+    }
+    .bin:hover { transform: translateY(-4px); box-shadow: 0 14px 24px rgba(29, 48, 34, .16); filter: saturate(1.08); }
+    .bin:active { transform: translateY(-1px) scale(.98); }
+    .bin.drag-over { transform: translateY(-5px) scale(1.02); border-color: #fff; box-shadow: 0 0 0 5px rgba(255,255,255,.6), 0 15px 28px rgba(29, 48, 34, .18); }
+    .bin-icon { font-size: 45px; line-height: 1; filter: drop-shadow(0 4px 4px rgba(0,0,0,.14)); }
+    .bin-name { font-size: 15px; font-weight: 900; }
+    .bin-example { margin-top: 5px; font-size: 11px; opacity: .88; }
+    .blue { background: #2374b8; }
+    .green { background: #2e9a5f; }
+    .yellow { background: #d3a525; }
+    .red { background: #d85353; }
+    .brown { background: #8b5a36; }
+    .gray { background: #65727c; }
+    .orange { background: #e47d2c; }
+    .oil { background: #147f80; }
+    .carton { background: #4a82a8; }
+
+    .feedback { min-height: 78px; margin-top: 22px; padding: 17px 20px; border-radius: 16px; display: flex; align-items: center; gap: 12px; background: #eef6eb; color: var(--green-dark); font-size: 14px; line-height: 1.45; }
+    .feedback[hidden] { display: none; }
+    .feedback strong { display: block; font-size: 16px; }
+    .feedback-icon { display: grid; place-items: center; width: 35px; height: 35px; flex: 0 0 auto; border-radius: 50%; color: #fff; font-size: 20px; background: var(--success); }
+    .feedback.error { background: #fff0ee; color: #8b3030; }
+    .feedback.error .feedback-icon { background: var(--danger); }
+    .feedback.orange { background: #fff0dc; color: #854719; }
+    .feedback.orange .feedback-icon { background: #e47d2c; }
+    .feedback.oil { background: #e4f4f3; color: #125c5d; }
+    .feedback.oil .feedback-icon { background: #147f80; }
+    .feedback.carton { background: #e8f1f8; color: #285a78; }
+    .feedback.carton .feedback-icon { background: #4a82a8; }
+    .feedback.neutral { background: #fff7dc; color: #7c5b12; }
+    .feedback.neutral .feedback-icon { background: #c4931c; }
+
+    .footer-note { padding: 24px 28px 28px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .footer-note strong { color: var(--ink); }
+
+    .end-screen { padding: 42px 20px 26px; text-align: center; }
+    .end-screen[hidden] { display: none; }
+    .end-badge { width: 74px; height: 74px; margin: 0 auto 18px; display: grid; place-items: center; border-radius: 50%; background: var(--lime); font-size: 38px; }
+    .end-screen h2 { margin: 0; font-size: 36px; letter-spacing: -.05em; }
+    .end-screen p { max-width: 540px; margin: 12px auto 24px; color: var(--muted); line-height: 1.6; }
+    .result { display: inline-flex; align-items: center; gap: 24px; padding: 13px 18px; border-radius: 15px; background: #f2f8ee; }
+    .result strong { color: var(--green-dark); font-size: 25px; }
+    .result span { color: var(--muted); font-size: 13px; font-weight: 800; }
+    .restart { margin-top: 22px; padding: 13px 20px; border: 0; border-radius: 12px; color: #fff; background: var(--green); cursor: pointer; font-weight: 900; box-shadow: 0 8px 18px rgba(46, 139, 87, .22); transition: transform .18s ease, background .18s ease; }
+    .restart:hover { background: var(--green-dark); transform: translateY(-2px); }
+
+    .shake { animation: shake .36s ease; }
+    .pop { animation: pop .36s ease; }
+    @keyframes shake { 25% { transform: translateX(-7px); } 50% { transform: translateX(7px); } 75% { transform: translateX(-4px); } }
+    @keyframes pop { 50% { transform: scale(1.03); } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+
+    @media (max-width: 850px) {
+      .hero { grid-template-columns: 1fr; padding-top: 38px; }
+      .hero-note { max-width: 600px; }
+      .play-area { grid-template-columns: 1fr; }
+      .item-panel { min-height: 320px; }
+      .item-visual { min-height: 125px; }
+    }
+    @media (max-width: 570px) {
+      .shell { width: min(100% - 22px, 1180px); }
+      .topbar { padding-top: 14px; }
+      .info-pill { display: none; }
+      .hero { padding: 34px 4px 24px; gap: 20px; }
+      h1 { font-size: 46px; }
+      .game-head { padding: 18px; display: block; }
+      .progress-wrap { margin-top: 13px; min-width: 0; }
+      .game-body { padding: 17px; }
+      .score-row { gap: 7px; }
+      .stat { padding: 11px 9px; }
+      .stat strong { font-size: 21px; }
+      .play-area { gap: 20px; }
+      .item-panel { min-height: 295px; padding: 22px; }
+      .bins { grid-template-columns: repeat(2, 1fr); gap: 9px; }
+      .bin { min-height: 143px; padding: 13px 8px; }
+      .bin-icon { font-size: 36px; }
+      .bin-name { font-size: 13px; }
+      .bin-example { font-size: 10px; }
+      .footer-note { padding: 20px 17px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="shell topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">♻</div>
+      <div>EcoMira<small>Aprender brincando</small></div>
+    </div>
+    <div class="info-pill">Indústria de cosméticos • refeitório • limpeza</div>
+  </header>
+
+  <main class="shell">
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Desafio rápido de reciclagem</p>
+        <h1 id="page-title">Para onde vai este item?</h1>
+        <p class="hero-copy">Escolha o destino correto para materiais do dia a dia em uma indústria de cosméticos: produção, refeitório e limpeza. Cada acerto ajuda a transformar informação em um hábito mais sustentável.</p>
+      </div>
+      <aside class="hero-note">
+        <strong>Como jogar</strong>
+        <p>Arraste o item até a lixeira ou toque primeiro no item e depois na lixeira. Os exemplos incluem produção cosmética, refeitório, limpeza, pilhas, óleo usado e caixas de leite.</p>
+      </aside>
+    </section>
+
+    <section class="game-card" aria-label="Jogo de coleta seletiva">
+      <div id="gameContent">
+        <div class="game-head">
+          <div class="game-label">Rodada em andamento</div>
+          <div class="progress-wrap" aria-label="Progresso do jogo">
+            <div class="progress"><span id="progressBar"></span></div>
+            <div class="round" id="roundText">1 de 63</div>
+          </div>
+        </div>
+
+        <div class="game-body">
+          <div class="score-row" aria-label="Placar">
+            <div class="stat"><span>Pontos</span><strong id="score">0</strong></div>
+            <div class="stat"><span>Sequência</span><strong id="streak">0 🔥</strong></div>
+            <div class="stat"><span>Acertos</span><strong id="hits">0/63</strong></div>
+          </div>
+
+          <div class="play-area">
+            <article class="item-panel" id="itemCard" draggable="true" tabindex="0" aria-label="Item para separar">
+              <div>
+                <div class="item-kicker">Separe este item</div>
+                <div class="item-visual"><div class="item-emoji" id="itemEmoji" aria-hidden="true">🍌</div></div>
+              </div>
+              <div>
+                <h2 class="item-name" id="itemName">Casca de banana</h2>
+                <p class="item-tip" id="itemTip">Pense no material predominante e no estado do item.</p>
+                <div class="drag-hint">↔ Arraste ou selecione uma lixeira</div>
+              </div>
+            </article>
+
+            <div class="bins-panel">
+              <p class="instruction">Qual lixeira recebe este item?</p>
+              <div class="bins" id="bins" role="group" aria-label="Lixeiras de coleta seletiva">
+                <button class="bin blue" data-category="paper" aria-label="Lixeira azul, papel">
+                  <span class="bin-icon" aria-hidden="true">🗞️</span><span><span class="bin-name">Papel</span><span class="bin-example">jornais e caixas</span></span>
+                </button>
+                <button class="bin green" data-category="glass" aria-label="Lixeira verde, vidro">
+                  <span class="bin-icon" aria-hidden="true">🍾</span><span><span class="bin-name">Vidro</span><span class="bin-example">garrafas e potes</span></span>
+                </button>
+                <button class="bin yellow" data-category="metal" aria-label="Lixeira amarela, metal">
+                  <span class="bin-icon" aria-hidden="true">🥫</span><span><span class="bin-name">Metal</span><span class="bin-example">latas e tampas</span></span>
+                </button>
+                <button class="bin red" data-category="plastic" aria-label="Lixeira vermelha, plástico">
+                  <span class="bin-icon" aria-hidden="true">🧴</span><span><span class="bin-name">Plástico</span><span class="bin-example">garrafas e potes</span></span>
+                </button>
+                <button class="bin brown" data-category="organic" aria-label="Lixeira marrom, orgânico">
+                  <span class="bin-icon" aria-hidden="true">🍂</span><span><span class="bin-name">Orgânico</span><span class="bin-example">restos de alimentos</span></span>
+                </button>
+                <button class="bin gray" data-category="reject" aria-label="Lixeira cinza, rejeitos">
+                  <span class="bin-icon" aria-hidden="true">🗑️</span><span><span class="bin-name">Rejeitos</span><span class="bin-example">sem reciclagem</span></span>
+                </button>
+                <button class="bin orange" data-category="special" aria-label="Ponto laranja, pilhas e resíduos especiais">
+                  <span class="bin-icon" aria-hidden="true">🔋</span><span><span class="bin-name">Pilhas</span><span class="bin-example">destinação laranja</span></span>
+                </button>
+                <button class="bin oil" data-category="oil" aria-label="Ponto de óleo usado">
+                  <span class="bin-icon" aria-hidden="true">🛢️</span><span><span class="bin-name">Óleo usado</span><span class="bin-example">destinação própria</span></span>
+                </button>
+                <button class="bin carton" data-category="carton" aria-label="Ponto de caixas de leite">
+                  <span class="bin-icon" aria-hidden="true">🧃</span><span><span class="bin-name">Caixas de leite</span><span class="bin-example">viram papel</span></span>
+                </button>
+              </div>
+              <div class="feedback" id="feedback" hidden role="status" aria-live="polite">
+                <div class="feedback-icon" id="feedbackIcon">✓</div>
+                <div><strong id="feedbackTitle">Muito bem!</strong><span id="feedbackText">Você escolheu a lixeira certa.</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-note"><strong>Importante:</strong> as cores seguem o padrão mais conhecido da coleta seletiva no Brasil. Neste jogo, as pilhas vão para o ponto <strong>laranja</strong>, o óleo usado vai para sua <strong>destinação própria</strong> e as caixas de leite limpas vão para o ponto de separação onde podem ser recicladas e virar papel. Siga sempre os procedimentos da empresa.</div>
+      </div>
+
+      <div class="end-screen" id="endScreen" hidden>
+        <div class="end-badge" aria-hidden="true">🌱</div>
+        <h2>Missão cumprida!</h2>
+        <p id="endMessage">Você completou o desafio. Pequenas escolhas fazem uma grande diferença quando viram rotina.</p>
+        <div class="result"><strong id="finalScore">0 pontos</strong><span id="finalHits">0 de 63 acertos</span></div>
+        <br>
+        <button class="restart" id="restartButton">Jogar novamente</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const rounds = [
+      { emoji: '🍌', name: 'Casca de banana', category: 'organic', tip: 'Restos de frutas e verduras podem virar composto orgânico.', explain: 'Cascas de frutas são resíduos orgânicos.' },
+      { emoji: '📰', name: 'Jornal', category: 'paper', tip: 'Papel limpo e seco é mais fácil de reciclar.', explain: 'Jornais são feitos de papel e devem ir para a lixeira azul.' },
+      { emoji: '🧴', name: 'Garrafa PET', category: 'plastic', tip: 'Esvazie a embalagem antes de separar.', explain: 'Garrafas PET são embalagens plásticas recicláveis.' },
+      { emoji: '🥫', name: 'Lata de refrigerante', category: 'metal', tip: 'Latas de alumínio podem voltar para a cadeia produtiva.', explain: 'Alumínio é um metal reciclável.' },
+      { emoji: '🍾', name: 'Garrafa de vidro', category: 'glass', tip: 'Se estiver quebrada, envolva com cuidado antes de descartar.', explain: 'Garrafas de vidro devem ser separadas na lixeira verde.' },
+      { emoji: '📦', name: 'Caixa de papelão', category: 'paper', tip: 'Dobre a caixa para ocupar menos espaço.', explain: 'Papelão é um tipo de papel reciclável.' },
+      { emoji: '🥛', name: 'Pote de iogurte', category: 'plastic', tip: 'Retire o excesso de alimento e, se possível, enxágue.', explain: 'Potes de iogurte geralmente são embalagens plásticas.' },
+      { emoji: '🫙', name: 'Pote de conserva', category: 'glass', tip: 'Separe o vidro da tampa antes de descartar.', explain: 'O pote é de vidro; a tampa metálica vai para o metal.' },
+      { emoji: '🥫', name: 'Lata de aço', category: 'metal', tip: 'Embalagens metálicas vazias podem ser recicladas.', explain: 'Latas de aço são materiais metálicos.' },
+      { emoji: '☕', name: 'Borra de café', category: 'organic', tip: 'Pode ser aproveitada em uma composteira.', explain: 'A borra de café é um resíduo orgânico.' },
+      { emoji: '🪞', name: 'Espelho quebrado', category: 'reject', tip: 'Espelhos têm composição diferente do vidro de embalagens.', explain: 'Espelhos não devem ir com garrafas e potes de vidro; descarte como rejeito, bem protegido.' },
+      { emoji: '🧻', name: 'Papel higiênico usado', category: 'reject', tip: 'Materiais contaminados não entram na reciclagem de papel.', explain: 'Papel higiênico usado é rejeito e não deve ir para a lixeira azul.' },
+      { emoji: '✉️', name: 'Envelope limpo', category: 'paper', tip: 'Retire clipes, plástico ou adesivos grandes quando possível.', explain: 'Envelopes de papel limpos podem ser reciclados na lixeira azul.' },
+      { emoji: '🥚', name: 'Caixa de ovos de papelão', category: 'paper', tip: 'Verifique se está seca e sem restos de alimento.', explain: 'Caixas de ovos de papelão são papéis recicláveis quando estão limpas.' },
+      { emoji: '🧴', name: 'Frasco de shampoo', category: 'plastic', tip: 'Esvazie e, se possível, retire a tampa antes de separar.', explain: 'Frascos de shampoo são embalagens plásticas.' },
+      { emoji: '🧼', name: 'Frasco de detergente', category: 'plastic', tip: 'Deixe a embalagem sem excesso de produto.', explain: 'Frascos de detergente são feitos de plástico reciclável.' },
+      { emoji: '🧻', name: 'Papel-alumínio limpo', category: 'metal', tip: 'Faça uma bolinha e retire restos de comida.', explain: 'O papel-alumínio limpo é um material metálico reciclável.' },
+      { emoji: '🔩', name: 'Tampa metálica', category: 'metal', tip: 'Separe tampas de potes e garrafas do material principal.', explain: 'Tampas de aço ou alumínio devem ir para a lixeira amarela.' },
+      { emoji: '🍷', name: 'Garrafa de vinho', category: 'glass', tip: 'Esvazie a garrafa e manuseie com cuidado se estiver quebrada.', explain: 'Garrafas de vidro devem ser separadas na lixeira verde.' },
+      { emoji: '🫙', name: 'Pote de molho de vidro', category: 'glass', tip: 'Retire o excesso de molho antes de descartar.', explain: 'Potes de molho são embalagens de vidro recicláveis.' },
+      { emoji: '🍎', name: 'Caroço e restos de maçã', category: 'organic', tip: 'Resíduos de frutas podem ser compostados.', explain: 'Restos de frutas são resíduos orgânicos.' },
+      { emoji: '🥚', name: 'Casca de ovo', category: 'organic', tip: 'Quebre as cascas para facilitar a compostagem.', explain: 'Cascas de ovos são resíduos orgânicos.' },
+      { emoji: '🍽️', name: 'Caneca de cerâmica quebrada', category: 'reject', tip: 'Cerâmica não deve ser misturada com vidro de embalagens.', explain: 'Cerâmica é rejeito; embale os pedaços com segurança antes de descartar.' },
+      { emoji: '🧻', name: 'Guardanapo usado', category: 'reject', tip: 'Papéis sujos ou engordurados não devem ir para a reciclagem.', explain: 'Guardanapo usado é rejeito e deve ir para a lixeira cinza.' },
+      { emoji: '🪵', name: 'Palito de madeira limpo', category: 'reject', tip: 'Materiais que não entram nos fluxos de reciclagem devem ser descartados conforme o procedimento interno.', explain: 'Neste jogo, pequenos palitos de madeira vão para rejeitos.' },
+      { emoji: '📇', name: 'Etiqueta de papel limpa', category: 'paper', tip: 'Papel limpo e seco pode ser separado do restante da embalagem.', explain: 'Etiquetas de papel limpas são destinadas à lixeira azul.' },
+      { emoji: '🧾', name: 'Comprovante de papel', category: 'reject', tip: 'Alguns papéis térmicos não são aceitos na reciclagem comum.', explain: 'Comprovantes térmicos devem ir para rejeitos, conforme o procedimento interno.' },
+      { emoji: '🧪', name: 'Frasco de amostra cosmética vazio', category: 'plastic', tip: 'Esvazie completamente e retire resíduos de produto.', explain: 'Quando for uma embalagem plástica limpa e vazia, pode ir para a lixeira vermelha.' },
+      { emoji: '🧴', name: 'Bisnaga plástica vazia', category: 'plastic', tip: 'Retire o excesso de fórmula antes de separar.', explain: 'Bisnagas plásticas vazias são embalagens plásticas.' },
+      { art: 'cap', name: 'Tampa plástica de embalagem', category: 'plastic', tip: 'Tampas plásticas podem ser separadas do frasco.', explain: 'Tampas de plástico vão para a lixeira vermelha.' },
+      { art: 'cartucho', name: 'Cartucho de maquiagem limpo', category: 'paper', tip: 'Retire peças plásticas e restos de produto quando possível.', explain: 'Cartuchos de papel ou papelão limpos vão para a lixeira azul.' },
+      { emoji: '🛢️', name: 'Óleo usado da operação', category: 'oil', tip: 'Nunca despeje o óleo na pia ou em uma lixeira comum.', explain: 'Óleo usado deve ser levado ao ponto interno de destinação de óleo usado.' },
+      { emoji: '🧴', name: 'Frasco de óleo vazio e limpo', category: 'plastic', tip: 'Somente depois de completamente esvaziado e limpo.', explain: 'Quando estiver vazio e limpo, o frasco plástico pode ir para a lixeira vermelha.' },
+      { emoji: '🧃', name: 'Caixa de leite limpa', category: 'carton', tip: 'Esvazie, achate e leve ao ponto de caixas de leite.', explain: 'As caixas de leite são separadas para reciclagem e podem virar papel.' },
+      { emoji: '🧃', name: 'Caixa de leite suja', category: 'reject', tip: 'Retire restos de leite antes de separar a embalagem.', explain: 'Caixas com restos de alimento devem ser limpas; se não puderem ser limpas, siga o fluxo de rejeitos.' },
+      { emoji: '🧤', name: 'Luva descartável sem contaminação', category: 'reject', tip: 'Itens de uso único geralmente não entram na reciclagem comum.', explain: 'Luva descartável deve ir para rejeitos, salvo orientação específica da empresa.' },
+      { emoji: '😷', name: 'Máscara descartável usada', category: 'reject', tip: 'Não coloque itens de uso pessoal usados junto aos recicláveis.', explain: 'Máscara descartável usada é rejeito e deve ser descartada conforme o procedimento interno.' },
+      { emoji: '🧹', name: 'Pano de limpeza sem produto', category: 'reject', tip: 'Têxteis e panos não devem ser colocados nas lixeiras de embalagens.', explain: 'Panos de limpeza vão para o fluxo de rejeitos ou para o procedimento definido pela limpeza.' },
+      { emoji: '🧽', name: 'Esponja de limpeza usada', category: 'reject', tip: 'Esponjas são materiais mistos e não têm reciclagem comum.', explain: 'Esponjas usadas devem ir para rejeitos, conforme a orientação da empresa.' },
+      { emoji: '🧹', name: 'Vassoura quebrada', category: 'reject', tip: 'Não coloque itens volumosos nas lixeiras de recicláveis.', explain: 'Vassouras quebradas devem seguir o fluxo de rejeitos definido pela empresa.' },
+      { emoji: '🧯', name: 'Lata de aerossol vazia', category: 'reject', tip: 'Nunca perfure, queime ou desmonte uma lata de aerossol.', explain: 'Siga o procedimento interno definido para aerossóis; neste jogo, não coloque em lixeiras comuns de recicláveis.' },
+      { emoji: '🔋', name: 'Pilha usada', category: 'special', tip: 'Não coloque pilhas em nenhuma lixeira comum.', explain: 'Pilhas devem ir para o ponto de destinação laranja da empresa.' },
+      { emoji: '💡', name: 'Lâmpada queimada', category: 'reject', tip: 'Manuseie com cuidado e não misture com vidro de embalagens.', explain: 'Lâmpadas não devem ir para a lixeira verde; siga o procedimento interno definido para elas.' },
+      { emoji: '🛢️', name: 'Embalagem com óleo ou solvente', category: 'oil', tip: 'Não descarte óleo ou solvente na pia ou em lixeira comum.', explain: 'Esse material deve seguir a destinação própria de óleo usado da empresa.' },
+      { emoji: '🧰', name: 'Pincel com resto de produto', category: 'reject', tip: 'Não lave resíduos de produto na pia nem misture com recicláveis.', explain: 'Siga o procedimento interno definido para materiais com resto de produto; neste jogo, não vai para recicláveis.' },
+      { emoji: '🍽️', name: 'Marmita plástica limpa', category: 'plastic', tip: 'Retire restos de comida e separe a embalagem seca.', explain: 'Marmitas plásticas limpas e secas podem ir para a lixeira vermelha.' },
+      { emoji: '🥡', name: 'Embalagem de comida engordurada', category: 'reject', tip: 'Embalagens engorduradas não devem contaminar o papel reciclável.', explain: 'Embalagem muito suja ou engordurada deve ir para rejeitos.' },
+      { emoji: '🥤', name: 'Copo plástico limpo', category: 'plastic', tip: 'Esvazie e retire o excesso de líquido antes de separar.', explain: 'Copos plásticos limpos são destinados à lixeira vermelha.' },
+      { emoji: '🥤', name: 'Copo descartável sujo', category: 'reject', tip: 'Retire restos de bebida e siga a orientação local.', explain: 'Copo descartável sujo vai para rejeitos neste jogo, para não contaminar os recicláveis.' },
+      { emoji: '🍴', name: 'Talher plástico descartável', category: 'plastic', tip: 'Retire restos de comida antes de descartar.', explain: 'Talheres plásticos limpos são destinados à lixeira vermelha.' },
+      { emoji: '🍎', name: 'Restos de salada', category: 'organic', tip: 'Separe os restos de alimentos das embalagens.', explain: 'Restos de vegetais do refeitório são resíduos orgânicos.' },
+      { emoji: '🍚', name: 'Arroz cozido restante', category: 'organic', tip: 'Resíduos de alimentos podem ser encaminhados à compostagem quando disponível.', explain: 'Arroz e outros restos de comida são resíduos orgânicos.' },
+      { emoji: '🦴', name: 'Ossos e restos de carne', category: 'organic', tip: 'Siga a regra da compostagem ou do refeitório para resíduos de alimentos.', explain: 'Ossos e restos de carne pertencem ao fluxo orgânico quando aceitos pelo sistema local.' },
+      { emoji: '🍵', name: 'Saquinho de chá usado', category: 'organic', tip: 'Retire grampos ou partes plásticas quando possível.', explain: 'O conteúdo orgânico do chá pode seguir para orgânicos; materiais mistos devem seguir o procedimento local.' },
+      { emoji: '🧃', name: 'Caixinha de suco limpa', category: 'carton', tip: 'Esvazie, achate e leve ao ponto de caixas de leite.', explain: 'Embalagens longa vida são separadas junto às caixas de leite e podem virar papel.' },
+      { art: 'touca', name: 'Touca descartável usada', category: 'reject', tip: 'Itens descartáveis de proteção não devem ir para recicláveis.', explain: 'Toucas descartáveis usadas são rejeitos, salvo procedimento específico.' },
+      { art: 'avental', name: 'Avental descartável usado', category: 'reject', tip: 'Não misture EPIs descartáveis com embalagens recicláveis.', explain: 'Avental descartável usado deve seguir o fluxo de rejeitos ou o procedimento interno.' },
+      { emoji: '🪣', name: 'Balde plástico quebrado', category: 'reject', tip: 'Não coloque peças grandes nas lixeiras de embalagens.', explain: 'Balde quebrado deve seguir o procedimento interno de rejeitos e materiais volumosos.' },
+      { emoji: '🛍️', name: 'Saco plástico limpo', category: 'plastic', tip: 'Mantenha o saco seco e sem resíduos antes de separar.', explain: 'Sacos plásticos limpos podem ir para a lixeira vermelha, conforme o fluxo local.' },
+      { emoji: '🧴', name: 'Frasco de álcool vazio', category: 'plastic', tip: 'Esvazie totalmente e mantenha a embalagem sem produto.', explain: 'Frascos plásticos vazios e limpos podem ir para a lixeira vermelha.' },
+      { emoji: '🧴', name: 'Frasco de álcool com produto', category: 'reject', tip: 'Não descarte líquido químico em lixeira comum ou pia.', explain: 'Siga o procedimento interno para produtos remanescentes; não misture com recicláveis.' },
+      { emoji: '🧻', name: 'Papel toalha usado na limpeza', category: 'reject', tip: 'Papel usado e úmido não é reciclável.', explain: 'Papel toalha usado deve ir para rejeitos.' },
+      { emoji: '🧹', name: 'Resíduo varrido do piso', category: 'reject', tip: 'Misturas de pequenos resíduos não devem contaminar recicláveis.', explain: 'Resíduo de varrição é rejeito, salvo se houver segregação específica.' }
+    ];
+
+    const categoryNames = {
+      paper: 'papel', glass: 'vidro', metal: 'metal', plastic: 'plástico', organic: 'orgânico',
+      reject: 'rejeitos', special: 'ponto laranja de pilhas', oil: 'destinação de óleo usado', carton: 'ponto de caixas de leite'
+    };
+    const itemCard = document.getElementById('itemCard');
+    const bins = [...document.querySelectorAll('.bin')];
+    const feedback = document.getElementById('feedback');
+    const feedbackIcon = document.getElementById('feedbackIcon');
+    const feedbackTitle = document.getElementById('feedbackTitle');
+    const feedbackText = document.getElementById('feedbackText');
+    const itemEmoji = document.getElementById('itemEmoji');
+    const itemName = document.getElementById('itemName');
+    const itemTip = document.getElementById('itemTip');
+    const scoreEl = document.getElementById('score');
+    const streakEl = document.getElementById('streak');
+    const hitsEl = document.getElementById('hits');
+    const roundText = document.getElementById('roundText');
+    const progressBar = document.getElementById('progressBar');
+    const gameContent = document.getElementById('gameContent');
+    const endScreen = document.getElementById('endScreen');
+    const finalScore = document.getElementById('finalScore');
+    const finalHits = document.getElementById('finalHits');
+    const endMessage = document.getElementById('endMessage');
+    const restartButton = document.getElementById('restartButton');
+
+    let current = 0;
+    let score = 0;
+    let streak = 0;
+    let hits = 0;
+    let locked = false;
+    let selected = false;
+
+    function renderRound() {
+      const round = rounds[current];
+      itemEmoji.className = round.art ? `item-emoji custom-art ${round.art}-art` : 'item-emoji';
+      itemEmoji.textContent = round.art ? '' : round.emoji;
+      itemName.textContent = round.name;
+      itemTip.textContent = round.tip;
+      roundText.textContent = `${current + 1} de ${rounds.length}`;
+      progressBar.style.width = `${(current / rounds.length) * 100}%`;
+      scoreEl.textContent = score;
+      streakEl.textContent = `${streak} 🔥`;
+      hitsEl.textContent = `${hits}/${rounds.length}`;
+      feedback.hidden = true;
+      feedback.className = 'feedback';
+      bins.forEach(bin => {
+        bin.classList.remove('drag-over', 'pop', 'shake');
+        bin.disabled = false;
+      });
+      itemCard.classList.remove('shake', 'pop');
+      itemCard.style.boxShadow = '';
+      selected = false;
+    }
+
+    function showFeedback(correct, round) {
+      feedback.hidden = false;
+      feedback.className = `feedback ${correct ? '' : 'error'} ${!correct && (round.category === 'special' || round.category === 'oil' || round.category === 'carton') ? (round.category === 'special' ? 'orange' : round.category) : ''}`;
+      feedbackIcon.textContent = correct ? '✓' : (round.category === 'special' ? '🔋' : round.category === 'oil' ? '🛢️' : round.category === 'carton' ? '🧃' : '×');
+      feedbackTitle.textContent = correct ? 'Muito bem!' : (round.category === 'special' ? 'Ponto laranja' : round.category === 'oil' ? 'Destinação de óleo usado' : round.category === 'carton' ? 'Ponto de caixas de leite' : 'Quase!');
+      feedbackText.textContent = correct
+        ? `${round.explain} +${streak > 1 ? 15 : 10} pontos.`
+        : `A lixeira correta é a de ${categoryNames[round.category]}. ${round.explain}`;
+    }
+
+    function chooseBin(bin) {
+      if (locked) return;
+      locked = true;
+      const round = rounds[current];
+      const correct = bin.dataset.category === round.category;
+      if (correct) {
+        hits++;
+        streak++;
+        score += streak > 1 ? 15 : 10;
+        bin.classList.add('pop');
+      } else {
+        streak = 0;
+        bin.classList.add('shake');
+        itemCard.classList.add('shake');
+      }
+      showFeedback(correct, round);
+      scoreEl.textContent = score;
+      streakEl.textContent = `${streak} 🔥`;
+      hitsEl.textContent = `${hits}/${rounds.length}`;
+      bins.forEach(b => b.disabled = true);
+      const feedbackDelay = correct ? 1450 : 5200;
+      setTimeout(() => {
+        current++;
+        if (current >= rounds.length) finishGame();
+        else { locked = false; renderRound(); }
+      }, feedbackDelay);
+    }
+
+    bins.forEach(bin => {
+      bin.addEventListener('click', () => chooseBin(bin));
+      bin.addEventListener('dragover', event => { event.preventDefault(); if (!locked) bin.classList.add('drag-over'); });
+      bin.addEventListener('dragleave', () => bin.classList.remove('drag-over'));
+      bin.addEventListener('drop', event => { event.preventDefault(); bin.classList.remove('drag-over'); chooseBin(bin); });
+    });
+
+    itemCard.addEventListener('dragstart', event => { if (!locked) { event.dataTransfer.setData('text/plain', 'item'); itemCard.style.opacity = '.7'; } });
+    itemCard.addEventListener('dragend', () => { itemCard.style.opacity = '1'; });
+    itemCard.addEventListener('click', () => {
+      if (locked) return;
+      selected = !selected;
+      itemCard.style.boxShadow = selected ? '0 0 0 5px rgba(201, 238, 117, .5)' : '';
+      feedback.hidden = false;
+      feedback.className = 'feedback neutral';
+      feedbackIcon.textContent = '↗';
+      feedbackTitle.textContent = selected ? 'Item selecionado' : 'Item desmarcado';
+      feedbackText.textContent = selected ? 'Agora toque na lixeira que você considera correta.' : 'Você pode arrastar o item ou selecioná-lo novamente.';
+    });
+    itemCard.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); itemCard.click(); } });
+
+    function finishGame() {
+      progressBar.style.width = '100%';
+      gameContent.hidden = true;
+      endScreen.hidden = false;
+      finalScore.textContent = `${score} pontos`;
+      finalHits.textContent = `${hits} de ${rounds.length} acertos`;
+      const percentage = hits / rounds.length;
+      endMessage.textContent = percentage === 1
+        ? 'Perfeito! Você separou todos os materiais. Agora leve esse conhecimento para o dia a dia.'
+        : percentage >= .75
+          ? 'Excelente resultado! Revise os itens que confundiram você e tente superar sua pontuação.'
+          : 'Bom começo! Rejogue para memorizar as cores e os materiais da coleta seletiva.';
+    }
+
+    restartButton.addEventListener('click', () => {
+      current = 0; score = 0; streak = 0; hits = 0; locked = false;
+      gameContent.hidden = false;
+      endScreen.hidden = true;
+      renderRound();
+      document.querySelector('.game-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    renderRound();
+  </script>
+</body>
+</html>
